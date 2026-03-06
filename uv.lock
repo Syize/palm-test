@@ -1,0 +1,23 @@
+version = 1
+revision = 3
+requires-python = ">=3.11"
+
+[[package]]
+name = "fprettify"
+version = "0.3.7"
+source = { git = "https://github.com/Syize/fprettify#4f36e1cb9336272a4956310af37ae3505d9bbf7c" }
+
+[[package]]
+name = "palm-test"
+version = "0.1.0"
+source = { virtual = "." }
+
+[package.dev-dependencies]
+dev = [
+    { name = "fprettify" },
+]
+
+[package.metadata]
+
+[package.metadata.requires-dev]
+dev = [{ name = "fprettify", git = "https://github.com/Syize/fprettify" }]

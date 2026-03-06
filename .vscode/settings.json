@@ -1,0 +1,11 @@
+{
+    "fortran.linter.includePaths": [
+        "/usr/include"
+    ],
+    "fortran.formatting.formatter": "fprettify",
+    "fortran.formatting.fprettifyArgs": [
+        "-i 4",
+        "-w 4"
+    ],
+    "fortran.formatting.path": "/home/syize/Documents/Fortran/palm-test/.venv/bin"
+}
