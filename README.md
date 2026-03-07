@@ -1,2 +1,3 @@
 # palm-test
-My cool new project!
+
+This repo has some code copied from PALM model to debug variables and functions in it.
