@@ -29,20 +29,12 @@ module topography_mod
         only: dzw, &
               dzu, &
               zu, &
-              zw
+              zw, ddzu, ddzw
 
     use boundary_settings_mod, &
         only: set_lateral_neumann_bc
 
     use control_parameters
-
-    ! use cpulog, &
-    !     only: cpu_log, &
-    !           log_point_s
-
-    ! use cut_cell_topography_mod, &
-    !     only: cct_define_topography, &
-    !           cct_input
 
     use exchange_horiz_mod, &
         only: exchange_horiz_2d, &
@@ -1055,9 +1047,9 @@ contains
         deallocate (topo_tmp)
         !-- Issue an informative message if any 1-grid point wide holes were filled.
         if (num_hole_total > 0) then
-            write (*, '(A,I6,A,A,I2,A)') 'topography was filtered: &', num_hole_total, &
+            write (*, '(A,I6,A,A,I2,A)') 'topography was filtered: ', num_hole_total, &
                 ' hole(s) resolved by only one grid point were filled during ', &
-                'initialization & in ', sweep, ' sweep(s)'
+                'initialization in ', sweep, ' sweep(s)'
             ! call message('topography_mod', 'PAC0344', 0, 0, 0, 6, 0)
         end if
         !-- Finally, exchange topo array again and if necessary set Neumann boundary condition in case of
@@ -1200,8 +1192,8 @@ contains
         ! #endif
         !-- Create an informative message if any narrow cavities were filled.
         if (num_cavity > 0) then
-            write (*, *) num_cavity, 'narrow cavities of less than ', filter % num_thresh, &
-                'horizontal grid points were filled during initialization'
+            write (*, '(I6,A,I2,A)') num_cavity, ' narrow cavities of less than ', filter % num_thresh, &
+                ' horizontal grid points were filled during initialization'
             ! call message('topography_mod', 'PAC0345', 0, 0, 0, 6, 0)
         end if
 
@@ -1650,8 +1642,11 @@ contains
         integer(int32) :: k2 !< running index along z-direction with respect to netcdf grid
         integer(int32) :: nr !< index variable indication maximum terrain height for respective building ID
         integer(int32) :: topo_top_index !< orography top index, used to map 3D buildings onto terrain
+        integer(iwp) :: n
 
         real(real32) :: ocean_offset !< offset to consider inverse vertical coordinate at topography
+        real(wp) :: dz_stretched !< stretched vertical grid spacing
+        real(wp) :: dz_level_end !< distance between calculated height level for u/v-grid and user-specified end level for stretching
         !< definition
 
         real(real32), dimension(:), allocatable :: oro_max !< maximum terrain height occupied by an building with certain id
@@ -1676,12 +1671,86 @@ contains
         !-- Grid point nzb is topography on the staggered grid, but
         !-- in case of vertically shifted nests, the boundary vertical coordinate does not have its standard
         !-- location 0.0, meaning that the respective boundary is "open".
+
+        ! print *, "Break point."
         topo = ibclr(topo, 0)
+
+        ! print *, "Break point 2."
 
         ! if (nest_shift_z == 0.0_real32) topo(nzb, :, :) = ibset(topo(nzb, :, :), 0)
         topo(nzb, :, :) = ibset(topo(nzb, :, :), 0)
+
+        ! print *, "Break point 3."
         !-- In order to map topography on PALM grid also in case of ocean simulations, pre-calculate an
         !-- offset value.
+
+        if (.not. allocated(zu)) then
+            allocate (zu(nzb:nzt + 1))
+            zu(0) = 0.0_wp
+            zu(1) = zu(0) + dz(1) * 0.5_wp
+
+            !--    Determine u and v height levels considering the possibility of grid stretching in several
+            !--    heights.
+            n = 1
+            dz_stretch_level_start_index = nzt + 1
+            dz_stretch_level_end_index = nzt + 1
+            dz_stretched = dz(1)
+
+            !--    The default value of dz_stretch_level_start is negative, thus the first condition is true
+            !--    even if no stretching shall be applied. Hence, the second condition is also necessary.
+            do k = 2, nzt + 1 - symmetry_flag
+                if (dz_stretch_level_start(n) <= zu(k - 1) .and. &
+                    dz_stretch_level_start(n) /= -9999999.9_wp) then
+                    dz_stretched = dz_stretched * dz_stretch_factor_array(n)
+
+                    if (dz(n) > dz(n + 1)) then
+                        dz_stretched = max(dz_stretched, dz(n + 1)) !Restrict dz_stretched to the user-specified (higher) dz
+                    else
+                        dz_stretched = min(dz_stretched, dz(n + 1)) !Restrict dz_stretched to the user-specified (lower) dz
+                    end if
+
+                    if (dz_stretch_level_start_index(n) == nzt + 1) dz_stretch_level_start_index(n) = k - 1
+
+                end if
+
+                zu(k) = zu(k - 1) + dz_stretched
+
+                !--       Make sure that the stretching ends exactly at dz_stretch_level_end
+                dz_level_end = abs(zu(k) - dz_stretch_level_end(n))
+
+                if (dz_level_end < dz(n + 1) / 3.0) then
+                    zu(k) = dz_stretch_level_end(n)
+                    dz_stretched = dz(n + 1)
+                    dz_stretch_level_end_index(n) = k
+                    n = n + 1
+                end if
+            end do
+            print *, "zu initialized."
+        end if
+        if (.not. allocated(zw)) then
+            allocate (zw(nzb:nzt + 1))
+            zw(0) = 0.0_wp
+                do k = 1, nzt
+                zw(k) = (zu(k) + zu(k + 1)) * 0.5_wp
+            end do
+            print *, "zw initialized."
+        end if
+        if (.not. allocated(dzu) .or. .not. allocated(dzw)) then
+            allocate (dzu(1:nzt + 1))
+            allocate (dzw(1:nzt + 1))
+            allocate (ddzu(1:nzt + 1))
+            allocate (ddzw(1:nzt + 1))
+
+            !-- Compute grid lengths.
+            do k = 1, nzt + 1
+                dzu(k) = zu(k) - zu(k - 1)
+                ddzu(k) = 1.0_wp / dzu(k)
+                dzw(k) = zw(k) - zw(k - 1)
+                ddzw(k) = 1.0_wp / dzw(k)
+            end do
+            print *, "dzu and dzw initialized."
+        end if
+
         ocean_offset = merge(zw(0), 0.0_real32, ocean_mode)
 
         ! #if defined( __debug )

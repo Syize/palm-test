@@ -54,25 +54,25 @@ module control_parameters
     character(LEN=20) :: bc_uv_b = 'dirichlet' !< namelist parameter
     character(LEN=20) :: bc_uv_t = 'dirichlet' !< namelist parameter
     character(LEN=20) :: dissipation_1d = 'detering' !< namelist parameter
-    character(LEN=20) :: fft_method = 'temperton-algorithm' !< namelist parameter
+    character(LEN=20) :: fft_method = 'fftw' !< namelist parameter
     character(LEN=20) :: mixing_length_1d = 'blackadar' !< namelist parameter
     character(LEN=20) :: random_generator = 'random-parallel' !< namelist parameter
-    character(LEN=20) :: reference_state = 'initial_profile' !< namelist parameter
+    character(LEN=20) :: reference_state = 'horizontal_average' !< namelist parameter
     character(LEN=20) :: restart_data_format = 'mpi_shared_memory' !< namelist parameter
     character(LEN=20) :: restart_data_format_input = 'undefined' !< namelist parameter
     character(LEN=20) :: restart_data_format_output = 'undefined' !< namelist parameter
     character(LEN=20) :: timestep_scheme = 'runge-kutta-3' !< namelist parameter
     character(LEN=20) :: turbulence_closure = '1.5-order' !< namelist parameter
-    character(LEN=23) :: origin_date_time = '2019-06-21 12:00:00 +00' !< date and time to be simulated
+    character(LEN=23) :: origin_date_time = '2025-12-01 00:00:00 +00' !< date and time to be simulated
     character(LEN=40) :: flux_input_mode = 'application-specific' !< type of flux input: dynamic or kinematic
     character(LEN=40) :: flux_output_mode = 'application-specific' !< type of flux output: dynamic or kinematic
-    character(LEN=40) :: topography = 'flat' !< namelist parameter
+    character(LEN=40) :: topography = 'read_from_file' !< namelist parameter
     character(LEN=64) :: host = '????' !< configuration identifier as given by palmrun option -c,
     !< ENVPAR namelist parameter provided by palmrun
     character(LEN=80) :: log_message !< user-defined message for debugging (sse data_log.f90)
     character(LEN=80) :: run_identifier !< run identifier as given by palmrun option -r, ENVPAR
     !< namelist parameter provided by palmrun
-    character(LEN=100) :: initializing_actions = ' ' !< namelist parameter
+    character(LEN=100) :: initializing_actions = 'read_from_file' !< namelist parameter
     character(LEN=100) :: restart_string = ' ' !< for storing strings in case of writing/reading restart
     !< data
     character(LEN=210) :: run_description_header !< string containing diverse run informations as run
@@ -83,7 +83,15 @@ module control_parameters
 
     character(LEN=varnamelength), dimension(300) :: data_output_pr_user = ' ' !< namelist parameter
     character(LEN=varnamelength), dimension(500) :: data_output_pr = ' ' !< namelist parameter
-    character(LEN=varnamelength), dimension(500) :: data_output = ' ' !< namelist parameter
+    ! character(LEN=varnamelength), dimension(500) :: data_output = ' ' !< namelist parameter
+    character(LEN=varnamelength), dimension(16) :: data_output = [ character(len=varnamelength) :: &
+                    'u', 'u_av', &
+                    'v', 'v_av', &
+                    'w', 'w_av', &
+                    'theta', 'theta_av', 'theta_xz', &
+                    'q', 'rh', 'pra*', 'ta', 'ta_xz', &
+                    'usm_surfz_up', 'usm_surfcat_up' &
+    ]
     character(LEN=varnamelength), dimension(500) :: data_output_user = ' ' !< namelist parameter
     character(LEN=varnamelength), dimension(500) :: doav = ' ' !< label array for multi-dimensional,
     !< averaged output quantities
@@ -188,8 +196,8 @@ module control_parameters
     integer(iwp) :: q_vertical_gradient_level_ind(12) = -9999 !< grid index values of q_vertical_gradient_level(s)
     integer(iwp) :: s_vertical_gradient_level_ind(12) = -9999 !< grid index values of s_vertical_gradient_level(s)
     integer(iwp) :: section(100, 3) !< collective array for section_xy/xz/yz
-    integer(iwp) :: section_xy(100) = -9999 !< namelist parameter
-    integer(iwp) :: section_xz(100) = -9999 !< namelist parameter
+    integer(iwp) :: section_xy(100) = 5 !< namelist parameter
+    integer(iwp) :: section_xz(100) = 50 !< namelist parameter
     integer(iwp) :: section_yz(100) = -9999 !< namelist parameter
     integer(iwp) :: ug_vertical_gradient_level_ind(12) = -9999 !< grid index values of ug_vertical_gradient_level(s)
     integer(iwp) :: vg_vertical_gradient_level_ind(12) = -9999 !< grid index values of vg_vertical_gradient_level(s)
@@ -281,7 +289,7 @@ module control_parameters
     logical :: force_print_header = .false. !< namelist parameter
     logical :: galilei_transformation = .false. !< namelist parameter
     logical :: homogenize_surface_temperature = .false. !< namelist parameter
-    logical :: humidity = .false. !< namelist parameter
+    logical :: humidity = .true. !< namelist parameter
     logical :: humidity_remote = .false. !< switch for receiving near-surface humidity flux
     !< (atmosphere-ocean coupling)
     logical :: implicit_diffusion_1d = .false. !< Crank-Nicolson scheme for diffusion term in 1d-model
@@ -383,7 +391,7 @@ module control_parameters
     real(wp) :: alpha_surface = 0.0_wp !< namelist parameter
     real(wp) :: atmos_ocean_sign = 1.0_wp !< vertical-grid conversion factor
     !< (=1.0 in atmosphere, =-1.0 in ocean)
-    real(wp) :: averaging_interval = 0.0_wp !< namelist parameter
+    real(wp) :: averaging_interval = 600.0_wp !< namelist parameter
     real(wp) :: averaging_interval_pr = 9999999.9_wp !< namelist parameter
     real(wp) :: bc_pt_t_val !< vertical gradient of pt near domain top
     real(wp) :: bc_q_t_val !< vertical gradient of humidity near domain top
@@ -405,24 +413,24 @@ module control_parameters
     real(wp) :: days_since_reference_point = 0.0_wp !< days after atmosphere-ocean coupling has been activated,
     !< or after spinup phase of LSM has been finished
     real(wp) :: disturbance_amplitude = 0.25_wp !< namelist parameter
-    real(wp) :: disturbance_energy_limit = 0.01_wp !< namelist parameter
+    real(wp) :: disturbance_energy_limit = 0.015_wp !< namelist parameter
     real(wp) :: disturbance_level_b = -9999999.9_wp !< namelist parameter
     real(wp) :: disturbance_level_t = -9999999.9_wp !< namelist parameter
     real(wp) :: dp_level_b = 0.0_wp !< namelist parameter
     real(wp) :: dt = -1.0_wp !< namelist parameter
-    real(wp) :: dt_averaging_input = 0.0_wp !< namelist parameter
+    real(wp) :: dt_averaging_input = 10.0_wp !< namelist parameter
     real(wp) :: dt_averaging_input_pr = 9999999.9_wp !< namelist parameter
     real(wp) :: dt_coupling = 9999999.9_wp !< namelist parameter
-    real(wp) :: dt_data_output = 9999999.9_wp !< namelist parameter
-    real(wp) :: dt_data_output_av = 9999999.9_wp !< namelist parameter
-    real(wp) :: dt_disturb = 9999999.9_wp !< namelist parameter
-    real(wp) :: dt_dopr = 9999999.9_wp !< namelist parameter
+    real(wp) :: dt_data_output = 600.0_wp !< namelist parameter
+    real(wp) :: dt_data_output_av = 600.0_wp !< namelist parameter
+    real(wp) :: dt_disturb = 150.0_wp !< namelist parameter
+    real(wp) :: dt_dopr = 600.0_wp !< namelist parameter
     real(wp) :: dt_dopr_listing = 9999999.9_wp !< namelist parameter
-    real(wp) :: dt_dots = 9999999.9_wp !< namelist parameter
-    real(wp) :: dt_do2d_xy = 9999999.9_wp !< namelist parameter
-    real(wp) :: dt_do2d_xz = 9999999.9_wp !< namelist parameter
-    real(wp) :: dt_do2d_yz = 9999999.9_wp !< namelist parameter
-    real(wp) :: dt_do3d = 9999999.9_wp !< namelist parameter
+    real(wp) :: dt_dots = 600.0_wp !< namelist parameter
+    real(wp) :: dt_do2d_xy = 1.0_wp !< namelist parameter
+    real(wp) :: dt_do2d_xz = 600.0_wp !< namelist parameter
+    real(wp) :: dt_do2d_yz = 600.0_wp !< namelist parameter
+    real(wp) :: dt_do3d = 600.0_wp !< namelist parameter
     real(wp) :: dt_max = 20.0_wp !< namelist parameter
     real(wp) :: dt_restart = 9999999.9_wp !< namelist parameter
     real(wp) :: dt_run_control = 60.0_wp !< namelist parameter
@@ -434,7 +442,7 @@ module control_parameters
     real(wp) :: dz_stretch_level = -9999999.9_wp !< namelist parameter
     real(wp) :: e_init = 0.0_wp !< namelist parameter
     real(wp) :: e_min = 0.0_wp !< namelist parameter
-    real(wp) :: end_time = 0.0_wp !< namelist parameter
+    real(wp) :: end_time = 1200.0_wp !< namelist parameter
     real(wp) :: f = 0.0_wp !< Coriolis parameter
     real(wp) :: fs = 0.0_wp !< Coriolis parameter
     real(wp) :: implicit_timestep_factor = 5.0_wp !< factor by which the timestep is enlarged when
@@ -540,7 +548,7 @@ module control_parameters
     real(wp) :: do2d_yz_last_time(0:1) = -1.0_wp !< time of previous yz output
     real(wp) :: dpdxy(1:2) = 0.0_wp !< namelist parameter
     real(wp) :: dt_domask(max_masks) = 9999999.9_wp !< namelist parameter
-    real(wp) :: dz(10) = -1.0_wp !< namelist parameter
+    real(wp) :: dz(10) = 3.0_wp !< namelist parameter
     real(wp) :: dz_stretch_level_start(9) = -9999999.9_wp !< namelist parameter
     real(wp) :: dz_stretch_level_end(9) = 9999999.9_wp !< namelist parameter
     real(wp) :: dz_stretch_factor_array(9) = 1.08_wp !< namelist parameter

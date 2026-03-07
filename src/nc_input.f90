@@ -502,7 +502,9 @@ module netcdf_data_input_mod
 
     character(LEN=10) :: char_fill = '_FillValue' !< name of fill value attribute in NetCDF file
 
-    character(LEN=100) :: input_file_static = 'PIDS_STATIC' !< Name of file which comprises static input data
+    ! character(LEN=100) :: input_file_static = 'PIDS_STATIC' !< Name of file which comprises static input data
+    character(LEN=100) :: input_file_static = &
+                    '/home/syize/Documents/Fortran/palm-test/data/PIDS_STATIC'
     character(LEN=100) :: input_file_dynamic = 'PIDS_DYNAMIC' !< Name of file which comprises dynamic input data
     character(LEN=100) :: input_file_chem = 'PIDS_CHEM' !< Name of file which comprises chemistry input data
     character(LEN=100) :: input_file_vm = 'PIDS_VM' !< Name of file which comprises virtual measurement data
