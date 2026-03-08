@@ -1,9 +1,9 @@
 !    -*- f90 -*-
 ! Note: the context of this file is case sensitive.
 
-python module palm_model ! in 
-    interface  ! in :palm_model
-        module palm_test ! in :palm_model:../src/palm-test.f90
+python module palm ! in 
+    interface  ! in :palm
+        module palm_test ! in :palm:../src/palm-test.f90
             use topography_mod, only: init_topography
             use indices, only: topo_top_ind,nysg,nyng,nxlg,nxrg
             use arrays_3d, only: zu,zw
@@ -14,15 +14,15 @@ python module palm_model ! in
             integer, private :: point_index
             real(kind=wp), public,allocatable,dimension(:,:) :: terrain_height
             logical, private,optional :: read_data_flag=.false.
-            subroutine extract_scalar_grid_terrain_height(file_path) ! in :palm_model:../src/palm-test.f90:palm_test
+            subroutine extract_scalar_grid_terrain_height(file_path) ! in :palm:../src/palm-test.f90:palm_test
                 character*100 intent(in) :: file_path
             end subroutine extract_scalar_grid_terrain_height
-            subroutine extract_w_grid_terrain_height(file_path) ! in :palm_model:../src/palm-test.f90:palm_test
+            subroutine extract_w_grid_terrain_height(file_path) ! in :palm:../src/palm-test.f90:palm_test
                 character*100 intent(in) :: file_path
             end subroutine extract_w_grid_terrain_height
         end module palm_test
     end interface 
-end python module palm_model
+end python module palm
 
 ! This file was auto-generated with f2py (version:2.4.2).
 ! See:
