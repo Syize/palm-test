@@ -5,7 +5,7 @@ Interface to read terrain height data in PALM.
 import numpy as np
 
 # extension should be place in the same directory as this script.
-from . import palm
+from .palm import palm
 
 
 class PALMTopoExtracter:
@@ -30,18 +30,18 @@ class PALMTopoExtracter:
         return cls.__instance
 
     def read_scalar_terrain_height(self) -> np.ndarray:
-        palm.palm_test.extract_scalar_grid_terrain_height(self.file_path)
+        palm.extract_scalar_grid_terrain_height(self.file_path)
     
-        terrain_height = palm.palm_test.terrain_height.copy()
+        terrain_height = palm.terrain_height.copy()
     
         return terrain_height
     
     def read_w_terrain_height(self) -> np.ndarray:
-        palm.palm_test.extract_w_grid_terrain_height(self.file_path)
+        palm.extract_w_grid_terrain_height(self.file_path)
     
-        terrain_height = palm.palm_test.terrain_height.copy()
+        terrain_height = palm.terrain_height.copy()
     
         return terrain_height
 
 
-__all__ = ["PALMTopoExtracter"]
+__all__ = ["PALMTopoExtracter", "palm"]

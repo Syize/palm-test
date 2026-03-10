@@ -1,6 +1,6 @@
 import numpy as np
 
-class palm_test:
+class palm:
 
     terrain_height: np.ndarray
 
@@ -10,5 +10,9 @@ class palm_test:
 
     @classmethod
     def extract_w_grid_terrain_height(cls, file_path: str) -> np.ndarray:
+        ...
+
+    @classmethod
+    def say_hello(cls) -> None:
         ...
     

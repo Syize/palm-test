@@ -1,4 +1,4 @@
-module palm_test
+module palm
     use topography_mod, only: init_topography
     use indices, only: topo_top_ind, nysg, nyng, nxlg, nxrg
     use arrays_3d, only: zu, zw
@@ -16,8 +16,14 @@ module palm_test
 
     private
 
-    public :: extract_scalar_grid_terrain_height, extract_w_grid_terrain_height, terrain_height
+    public :: extract_scalar_grid_terrain_height, extract_w_grid_terrain_height, terrain_height, say_hello
 contains
+
+    subroutine say_hello
+        print *, "Hi, palm interface is built successfully."
+        
+    end subroutine say_hello
+
     subroutine read_data
         if (read_data_flag) then
             print *, 'No need to call read_data again.'
@@ -86,4 +92,4 @@ contains
         input_file_static = file_path
 
     end subroutine set_input_file_path
-end module palm_test
+end module palm
